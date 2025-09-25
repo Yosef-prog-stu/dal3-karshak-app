@@ -4,6 +4,7 @@ import MenuSection from "@/components/MenuSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Phone, MapPin, Clock, Facebook, Instagram, Twitter } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
@@ -17,10 +18,10 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="text-right">
-              <h2 className="text-4xl font-bold text-foreground mb-6">
-                عن مطعم
-                <span className="gradient-golden bg-clip-text text-transparent mr-3">دلع كرشك</span>
-              </h2>
+          <h2 className="text-4xl font-bold text-foreground mb-6">
+            عن مطعم
+            <span className="text-yellow-400 mr-3">دلع كرشك</span>
+          </h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
                 منذ تأسيسنا عام 2015، ونحن نقدم أفضل الأطباق العربية والعالمية بنكهات أصيلة ومذاق لا يُنسى. 
                 نستخدم أجود المكونات الطازجة ونحضر كل طبق بحب وعناية فائقة.
@@ -32,6 +33,9 @@ const Index = () => {
               <Button variant="hero" size="lg">
                 احجز طاولتك الآن
               </Button>
+              <Link to="/admin" className="inline-block ml-3 text-sm underline text-muted-foreground hover:text-primary">
+                دخول المشرف
+              </Link>
             </div>
             
             <div className="grid grid-cols-2 gap-6">
@@ -74,7 +78,7 @@ const Index = () => {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-foreground mb-6">
               تواصل
-              <span className="gradient-golden bg-clip-text text-transparent mr-3">معنا</span>
+              <span className="text-yellow-400 mr-3">معنا</span>
             </h2>
             <p className="text-xl text-muted-foreground">
               نحن هنا لخدمتك في أي وقت

@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Star, Clock, MapPin } from "lucide-react";
-import heroImage from "@/assets/hero-restaurant.jpg";
 
 const HeroSection = () => {
   return (
@@ -8,7 +7,7 @@ const HeroSection = () => {
       {/* الخلفية */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        style={{ backgroundImage: "url(https://images.unsplash.com/photo-1541542684-4a6bb0b094de?q=80&w=1600&auto=format&fit=crop)" }}
       >
         <div className="absolute inset-0 bg-black/40" />
       </div>
@@ -20,7 +19,7 @@ const HeroSection = () => {
           <div className="mb-8">
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
               دلع
-              <span className="gradient-golden bg-clip-text text-transparent mr-4">
+              <span className="text-yellow-400 mr-4">
                 كرشك
               </span>
             </h1>

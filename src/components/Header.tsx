@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
+import { CartSheet, CartSummary } from "@/components/CartSheet";
 
 const Header = () => {
   return (
@@ -42,6 +44,15 @@ const Header = () => {
             <Button variant="hero" size="sm">
               اطلب الآن
             </Button>
+            <Link to="/admin">
+              <Button variant="outline" size="sm">
+                الادارة
+              </Button>
+            </Link>
+            <div className="flex items-center gap-3">
+              <CartSummary />
+              <CartSheet />
+            </div>
           </div>
 
           {/* زر القائمة للجوال */}
