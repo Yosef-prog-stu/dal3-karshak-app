@@ -34,6 +34,50 @@ const Admin = () => {
   const [itemCategory, setItemCategory] = useState(categories[1] ?? "أطباق رئيسية");
   const [itemImageUrl, setItemImageUrl] = useState("");
 
+  // Discount configuration (multiple codes)
+  type DiscountDef = { code: string; percent: number };
+  const [discountCodes, setDiscountCodes] = useState<DiscountDef[]>([]);
+  const [newDiscountCode, setNewDiscountCode] = useState("");
+  const [newDiscountPercent, setNewDiscountPercent] = useState("");
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("app.discount.codes");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setDiscountCodes(parsed as DiscountDef[]);
+      } else {
+        // migrate legacy single code if exists
+        const legacyCode = localStorage.getItem("app.discount.code");
+        const legacyPercentRaw = localStorage.getItem("app.discount.percent");
+        const legacyPercent = Math.max(0, Math.min(100, parseFloat(legacyPercentRaw || "0") || 0));
+        if (legacyCode && legacyPercent > 0) {
+          const migrated: DiscountDef[] = [{ code: legacyCode, percent: legacyPercent }];
+          setDiscountCodes(migrated);
+          localStorage.setItem("app.discount.codes", JSON.stringify(migrated));
+        }
+      }
+    } catch {}
+  }, []);
+  function addDiscount(e: React.FormEvent) {
+    e.preventDefault();
+    const code = (newDiscountCode || "").trim();
+    const p = Math.max(0, Math.min(100, parseFloat(newDiscountPercent || "0") || 0));
+    if (!code || p <= 0) return;
+    const existsIdx = discountCodes.findIndex((d) => d.code.toLowerCase() === code.toLowerCase());
+    const updated = existsIdx >= 0
+      ? discountCodes.map((d, i) => (i === existsIdx ? { code, percent: p } : d))
+      : [{ code, percent: p }, ...discountCodes];
+    setDiscountCodes(updated);
+    try { localStorage.setItem("app.discount.codes", JSON.stringify(updated)); } catch {}
+    setNewDiscountCode("");
+    setNewDiscountPercent("");
+  }
+  function removeDiscount(code: string) {
+    const updated = discountCodes.filter((d) => d.code.toLowerCase() !== code.toLowerCase());
+    setDiscountCodes(updated);
+    try { localStorage.setItem("app.discount.codes", JSON.stringify(updated)); } catch {}
+  }
+
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     try {
@@ -85,7 +129,7 @@ const Admin = () => {
               </div>
               <div>
                 <Label htmlFor="password">كلمة المرور</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="أدخل كلمة المرور (admin)" />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="أدخل كلمة المرور" />
               </div>
               <Button type="submit">دخول</Button>
             </form>
@@ -109,6 +153,34 @@ const Admin = () => {
               </div>
               <Button type="submit">حفظ</Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <h2 className="text-xl font-semibold">أكواد الخصم</h2>
+            <form onSubmit={addDiscount} className="space-y-3">
+              <div>
+                <Label htmlFor="discountCodeNew">كود الخصم</Label>
+                <Input id="discountCodeNew" value={newDiscountCode} onChange={(e) => setNewDiscountCode(e.target.value)} placeholder="مثال: SAVE10" />
+              </div>
+              <div>
+                <Label htmlFor="discountPercentNew">نسبة الخصم (%)</Label>
+                <Input id="discountPercentNew" type="number" min={0} max={100} value={newDiscountPercent} onChange={(e) => setNewDiscountPercent(e.target.value)} placeholder="مثال: 10" />
+              </div>
+              <Button type="submit">إضافة/تحديث الكود</Button>
+            </form>
+            {discountCodes.length > 0 ? (
+              <div className="pt-4 space-y-2">
+                <div className="text-sm text-muted-foreground">الأكواد الحالية:</div>
+                {discountCodes.map((d) => (
+                  <div key={d.code} className="flex items-center justify-between border rounded px-3 py-2">
+                    <div className="text-sm">{d.code} — {d.percent}%</div>
+                    <Button variant="destructive" size="sm" onClick={() => removeDiscount(d.code)}>حذف</Button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 

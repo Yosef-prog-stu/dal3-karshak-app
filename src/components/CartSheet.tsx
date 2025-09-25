@@ -15,6 +15,7 @@ export const CartSheet: React.FC = () => {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
+  const [customerDiscountCode, setCustomerDiscountCode] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,10 +40,10 @@ export const CartSheet: React.FC = () => {
     try {
       localStorage.setItem(
         "app.checkout.info",
-        JSON.stringify({ name: customerName, phone: customerPhone, address: customerAddress })
+        JSON.stringify({ name: customerName, phone: customerPhone, address: customerAddress, discountCode: customerDiscountCode })
       );
     } catch {}
-  }, [customerName, customerPhone, customerAddress]);
+  }, [customerName, customerPhone, customerAddress, customerDiscountCode]);
 
   // التحقق من الطلبات الجاهزة
   useEffect(() => {
@@ -133,20 +134,48 @@ export const CartSheet: React.FC = () => {
                 <label className="text-sm block mb-1">العنوان</label>
                 <Input value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="الشارع - الحي - المدينة" />
               </div>
+              <div>
+                <label className="text-sm block mb-1">كود الخصم</label>
+                <Input value={customerDiscountCode} onChange={(e) => setCustomerDiscountCode(e.target.value)} placeholder="مثال: SAVE10" />
+              </div>
             </div>
             <div className="mt-6 flex items-center justify-between">
               <Button variant="destructive" onClick={clear}>تفريغ السلة</Button>
               <Button
                 onClick={async () => {
+                  // Compute discount
+                  let applied_discount_percent = 0;
+                  let applied_discount_amount = 0;
+                  let total_before_discount = state.items.reduce((a, c) => a + c.quantity * c.priceSar, 0);
+                  let total_after_discount = total_before_discount;
+                  try {
+                    const raw = localStorage.getItem("app.discount.codes");
+                    if (raw) {
+                      const list = JSON.parse(raw) as Array<{ code: string; percent: number }>;
+                      const found = (list || []).find((d) => d.code && customerDiscountCode && d.code.trim().toLowerCase() === customerDiscountCode.trim().toLowerCase());
+                      if (found && found.percent > 0) {
+                        const p = Math.max(0, Math.min(100, Number(found.percent) || 0));
+                        applied_discount_percent = p;
+                        applied_discount_amount = Math.round((total_before_discount * p)) / 100;
+                        total_after_discount = Math.max(0, total_before_discount - applied_discount_amount);
+                      }
+                    }
+                  } catch {}
+
                   const orderId = await createOrder({
                     customer_name: customerName,
                     customer_phone: customerPhone,
                     customer_address: customerAddress,
                     items: state.items.map((it) => ({ id: it.id, name: it.name, qty: it.quantity, price_sar: it.priceSar, note: it.note, image_url: it.imageUrl, emoji: it.emoji })),
-                    total_sar: state.items.reduce((a, c) => a + c.quantity * c.priceSar, 0),
+                    total_sar: total_after_discount,
+                    // extra fields for local display only (Supabase will ignore unknown or we strip in API)
+                    discount_code: customerDiscountCode || undefined,
+                    discount_percent: applied_discount_percent || undefined,
+                    discount_amount: applied_discount_amount || undefined,
+                    total_before_discount: total_before_discount || undefined,
                   });
                   if (orderId) {
-                    toast({ title: "تم العملية الطلب بنجاح" });
+                    toast({ title: "تم عملية الشراء بنجاح" });
                     clear();
                     setOpen(false);
                     window.dispatchEvent(new Event("admin:orders:refresh"));

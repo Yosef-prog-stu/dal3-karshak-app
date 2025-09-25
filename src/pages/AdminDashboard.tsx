@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +40,40 @@ const AdminDashboard = () => {
     return () => window.removeEventListener("admin:orders:refresh", refresh as EventListener);
   }, []);
 
+  // Admin discount codes management (quick actions)
+  type DiscountDef = { code: string; percent: number };
+  const [discountCodes, setDiscountCodes] = useState<DiscountDef[]>([]);
+  const [newDiscountCode, setNewDiscountCode] = useState("");
+  const [newDiscountPercent, setNewDiscountPercent] = useState("");
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("app.discount.codes");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setDiscountCodes(parsed as DiscountDef[]);
+      }
+    } catch {}
+  }, []);
+  function addDiscount(e: React.FormEvent) {
+    e.preventDefault();
+    const code = (newDiscountCode || "").trim();
+    const p = Math.max(0, Math.min(100, parseFloat(newDiscountPercent || "0") || 0));
+    if (!code || p <= 0) return;
+    const existsIdx = discountCodes.findIndex((d) => d.code.toLowerCase() === code.toLowerCase());
+    const updated = existsIdx >= 0
+      ? discountCodes.map((d, i) => (i === existsIdx ? { code, percent: p } : d))
+      : [{ code, percent: p }, ...discountCodes];
+    setDiscountCodes(updated);
+    try { localStorage.setItem("app.discount.codes", JSON.stringify(updated)); } catch {}
+    setNewDiscountCode("");
+    setNewDiscountPercent("");
+  }
+  function removeDiscount(code: string) {
+    const updated = discountCodes.filter((d) => d.code.toLowerCase() !== code.toLowerCase());
+    setDiscountCodes(updated);
+    try { localStorage.setItem("app.discount.codes", JSON.stringify(updated)); } catch {}
+  }
+
   const handleOrderReady = async (orderId: string) => {
     const success = await updateOrderStatus(orderId, 'ready');
     if (success) {
@@ -71,6 +106,36 @@ const AdminDashboard = () => {
 
       <Card className="mb-6">
         <CardContent className="p-4">
+          <h2 className="text-xl font-semibold mb-3">إجراءات المشرف — أكواد الخصم</h2>
+          <form onSubmit={addDiscount} className="grid grid-cols-1 md:grid-cols-6 gap-3">
+            <div className="md:col-span-3">
+              <Label htmlFor="adminDiscCode">كود الخصم</Label>
+              <Input id="adminDiscCode" value={newDiscountCode} onChange={(e) => setNewDiscountCode(e.target.value)} placeholder="مثال: SAVE10" />
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="adminDiscPercent">نسبة الخصم (%)</Label>
+              <Input id="adminDiscPercent" type="number" min={0} max={100} value={newDiscountPercent} onChange={(e) => setNewDiscountPercent(e.target.value)} placeholder="مثال: 10" />
+            </div>
+            <div className="md:col-span-1 flex items-end">
+              <Button type="submit">حفظ</Button>
+            </div>
+          </form>
+          {discountCodes.length > 0 ? (
+            <div className="mt-4 space-y-2">
+              <div className="text-sm text-muted-foreground">الأكواد الحالية:</div>
+              {discountCodes.map((d) => (
+                <div key={d.code} className="flex items-center justify-between border rounded px-3 py-2">
+                  <div className="text-sm">{d.code} — {d.percent}%</div>
+                  <Button variant="destructive" size="sm" onClick={() => removeDiscount(d.code)}>حذف</Button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardContent className="p-4">
           <h2 className="text-xl font-semibold mb-3">المشتريات الأخيرة</h2>
           {orders.length === 0 ? (
             <div className="text-sm text-muted-foreground">لا توجد مشتريات بعد.</div>
@@ -80,7 +145,15 @@ const AdminDashboard = () => {
                 <div key={o.id} className="border rounded p-3">
                   <div className="text-sm">الاسم: {o.customer_name} — الهاتف: {o.customer_phone}</div>
                   <div className="text-sm">العنوان: {o.customer_address}</div>
-                  <div className="text-xs text-muted-foreground mt-1">الإجمالي (SAR): {o.total_sar}</div>
+                  {typeof o.total_before_discount === 'number' && o.total_before_discount > 0 ? (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      الإجمالي قبل الخصم (SAR): {o.total_before_discount}
+                    </div>
+                  ) : null}
+                  {typeof o.discount_percent === 'number' && o.discount_percent > 0 ? (
+                    <div className="text-xs text-muted-foreground">خصم: {o.discount_percent}% {o.discount_code ? `(كود: ${o.discount_code})` : ''}</div>
+                  ) : null}
+                  <div className="text-xs text-muted-foreground mt-1">الإجمالي بعد الخصم (SAR): {o.total_sar}</div>
                   {Array.isArray(o.items) && o.items.length > 0 && (
                     <div className="mt-2 text-sm">
                       <div className="font-semibold mb-1">العناصر:</div>
