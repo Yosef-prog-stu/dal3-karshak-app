@@ -8,6 +8,7 @@ export type DbOrder = {
   customer_address: string;
   items: Array<{ id: number; name: string; qty: number; price_sar: number; note?: string; image_url?: string; emoji?: string }>;
   total_sar: number;
+  status?: 'pending' | 'ready' | 'completed';
 };
 
 export async function createOrder(order: DbOrder): Promise<string | null> {
@@ -24,6 +25,14 @@ export async function listOrders(limit = 50): Promise<DbOrder[] | null> {
     .limit(limit);
   if (error) return null;
   return data as unknown as DbOrder[];
+}
+
+export async function updateOrderStatus(orderId: string, status: 'pending' | 'ready' | 'completed'): Promise<boolean> {
+  const { error } = await supabase
+    .from("orders")
+    .update({ status })
+    .eq("id", orderId);
+  return !error;
 }
 
 

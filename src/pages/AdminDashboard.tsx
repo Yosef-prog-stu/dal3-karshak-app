@@ -7,7 +7,7 @@ import { useCurrency } from "@/hooks/use-currency";
 import { useMenuStore } from "@/hooks/use-menu-store";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { listOrders } from "@/integrations/supabase/orders";
+import { listOrders, updateOrderStatus } from "@/integrations/supabase/orders";
 
 const AdminDashboard = () => {
   const { state, updateItem, removeItem, addItem, addCategory } = useMenuStore();
@@ -37,6 +37,18 @@ const AdminDashboard = () => {
     window.addEventListener("admin:orders:refresh", refresh as EventListener);
     return () => window.removeEventListener("admin:orders:refresh", refresh as EventListener);
   }, []);
+
+  const handleOrderReady = async (orderId: string) => {
+    const success = await updateOrderStatus(orderId, 'ready');
+    if (success) {
+      // تحديث قائمة الطلبات
+      const data = await listOrders();
+      if (data) setOrders(data as any[]);
+      alert('تم تحديث حالة الطلب إلى "جاهز"');
+    } else {
+      alert('حدث خطأ في تحديث حالة الطلب');
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -80,6 +92,20 @@ const AdminDashboard = () => {
                       </ul>
                     </div>
                   )}
+                  <div className="mt-3 flex gap-2">
+                    <Badge variant={o.status === 'ready' ? 'default' : 'secondary'}>
+                      {o.status === 'ready' ? 'جاهز' : o.status === 'pending' ? 'في الانتظار' : 'مكتمل'}
+                    </Badge>
+                    {o.status !== 'ready' && (
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleOrderReady(o.id)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        لقد تم إعداد طلبك
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

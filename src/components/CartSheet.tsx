@@ -5,7 +5,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useCurrency } from "@/hooks/use-currency";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { createOrder } from "@/integrations/supabase/orders";
+import { createOrder, listOrders } from "@/integrations/supabase/orders";
 import { useToast } from "@/hooks/use-toast";
 
 export const CartSheet: React.FC = () => {
@@ -43,6 +43,33 @@ export const CartSheet: React.FC = () => {
       );
     } catch {}
   }, [customerName, customerPhone, customerAddress]);
+
+  // التحقق من الطلبات الجاهزة
+  useEffect(() => {
+    const checkReadyOrders = async () => {
+      if (customerPhone) {
+        const orders = await listOrders();
+        if (orders) {
+          const userOrders = orders.filter(order => 
+            order.customer_phone === customerPhone && order.status === 'ready'
+          );
+          if (userOrders.length > 0) {
+            toast({
+              title: "🎉 لقد تم تجهيز طلبك!",
+              description: "طلبك جاهز للاستلام. شكراً لاختيارك مطعم دلع كرشك!",
+              duration: 10000,
+            });
+          }
+        }
+      }
+    };
+
+    // تحقق كل 30 ثانية
+    const interval = setInterval(checkReadyOrders, 30000);
+    checkReadyOrders(); // تحقق فوري
+
+    return () => clearInterval(interval);
+  }, [customerPhone, toast]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
