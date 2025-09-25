@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/hooks/use-currency";
 import { useMenuStore } from "@/hooks/use-menu-store";
 import { useEffect, useState } from "react";
