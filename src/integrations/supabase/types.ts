@@ -155,6 +155,125 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          payload: Json | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+        }
+        Relationships: []
+      }
+      menu_categories: {
+        Row: {
+          created_at: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      menu_items: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: number
+          image: string | null
+          image_url: string | null
+          is_popular: boolean
+          name: string
+          price_sar: number
+          quantity: number | null
+          rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string
+          id: number
+          image?: string | null
+          image_url?: string | null
+          is_popular?: boolean
+          name: string
+          price_sar: number
+          quantity?: number | null
+          rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: number
+          image?: string | null
+          image_url?: string | null
+          is_popular?: boolean
+          name?: string
+          price_sar?: number
+          quantity?: number | null
+          rating?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["name"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_address: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          items: Json
+          total_sar: number
+        }
+        Insert: {
+          created_at?: string
+          customer_address: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          items: Json
+          total_sar: number
+        }
+        Update: {
+          created_at?: string
+          customer_address?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          items?: Json
+          total_sar?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

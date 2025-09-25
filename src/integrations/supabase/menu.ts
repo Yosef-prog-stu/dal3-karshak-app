@@ -16,35 +16,35 @@ export type DbMenuItem = {
 };
 
 export async function fetchAllItems(): Promise<DbMenuItem[] | null> {
-  const { data, error } = await supabase.from("menu_items").select("*");
+  const { data, error } = await (supabase as any).from("menu_items").select("*");
   if (error) return null;
   return data as unknown as DbMenuItem[];
 }
 
 export async function upsertItem(item: DbMenuItem): Promise<boolean> {
-  const { error } = await supabase.from("menu_items").upsert(item, { onConflict: "id" });
+  const { error } = await (supabase as any).from("menu_items").upsert(item, { onConflict: "id" });
   return !error;
 }
 
 export async function deleteItem(id: number): Promise<boolean> {
-  const { error } = await supabase.from("menu_items").delete().eq("id", id);
+  const { error } = await (supabase as any).from("menu_items").delete().eq("id", id);
   return !error;
 }
 
 export async function upsertCategory(name: string): Promise<boolean> {
-  const { error } = await supabase.from("menu_categories").upsert({ name }, { onConflict: "name" });
+  const { error } = await (supabase as any).from("menu_categories").upsert({ name }, { onConflict: "name" });
   return !error;
 }
 
 export async function fetchAllCategories(): Promise<string[] | null> {
-  const { data, error } = await supabase.from("menu_categories").select("name");
+  const { data, error } = await (supabase as any).from("menu_categories").select("name");
   if (error) return null;
   return (data as { name: string }[]).map((r) => r.name);
 }
 
 export async function logAudit(action: string, payload: unknown): Promise<void> {
   try {
-    await supabase.from("menu_audit_logs").insert({ action, payload });
+    await (supabase as any).from("menu_audit_logs").insert({ action, payload });
   } catch {}
 }
 
